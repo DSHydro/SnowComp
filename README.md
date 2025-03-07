@@ -1,49 +1,108 @@
-# python-project-template
+# Snow Analysis
 
-<span><img src="https://img.shields.io/badge/SSEC-Project-purple?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAOCAQAAABedl5ZAAAACXBIWXMAAAHKAAABygHMtnUxAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAMNJREFUGBltwcEqwwEcAOAfc1F2sNsOTqSlNUopSv5jW1YzHHYY/6YtLa1Jy4mbl3Bz8QIeyKM4fMaUxr4vZnEpjWnmLMSYCysxTcddhF25+EvJia5hhCudULAePyRalvUteXIfBgYxJufRuaKuprKsbDjVUrUj40FNQ11PTzEmrCmrevPhRcVQai8m1PRVvOPZgX2JttWYsGhD3atbHWcyUqX4oqDtJkJiJHUYv+R1JbaNHJmP/+Q1HLu2GbNoSm3Ft0+Y1YMdPSTSwQAAAABJRU5ErkJggg==&style=plastic" /><span>
-![BSD License](https://badgen.net/badge/license/BSD-3-Clause/blue)
-[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+A Python package for downloading, analyzing, and visualizing snow data.
 
-[![Documentation Status](https://readthedocs.org/projects/ssec-python-project-template/badge/?version=latest)](https://ssec-python-project-template.readthedocs.io/en/latest/?badge=latest)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/uw-ssec/python-project-template/main.svg)](https://results.pre-commit.ci/latest/github/uw-ssec/python-project-template/main)
-[![CI](https://github.com/uw-ssec/python-project-template/actions/workflows/ci.yml/badge.svg)](https://github.com/uw-ssec/python-project-template/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/uw-ssec/python-project-template/graph/badge.svg?token=13LYMLQBZL)](https://codecov.io/gh/uw-ssec/python-project-template)
+## Installation
 
-Python project repository template for developing python package. This template
-includes a basic structure for developing a python package, including a license,
-documentation, testing, and continuous integration. It is based on the
-[Scientific Python Library Development Guide and Cookiecutter](https://github.com/scientific-python/cookie).
+```bash
+pip install comparator
+```
 
-This repository contains a template for developing a python project. To start,
-click on the green
-[Use this template](https://github.com/uw-ssec/python-project-template/generate)
-in the top right. This will allow you to create a new project using this base
-template.
+Or install directly from the source:
 
-## What's included
+```bash
+git clone https://github.com/yourusername/comparator.git
+cd comparator
+pip install -e .
+```
 
-This template contains the following:
+## Usage
 
-1. Python package setup files for building python package to a distribution. See
-   [PyPA packaging user guide](https://packaging.python.org/en/latest/) for more
-   info.
-2. Basic license file (currently BSD 3-Clause License, but can be modified to
-   specific project). See [choose a license](https://choosealicense.com/) for
-   more licenses.
-3. Starter [Jupyter Book](https://jupyterbook.org) based documentation
-   structure.
-4. Single test example to demonstrate the use of
-   [pytest](https://docs.pytest.org/en/7.2.x/).
-5. [GitHub workflow](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
-   config to run tests.
-6. [Pre-commit](https://pre-commit.com/) config to enable code style checks
-   before committing.
-7. [Read The Docs](https://readthedocs.org/) config to enable free hosting of
-   documentation.
-8. Code coverage analysis with
-   [`coverage.py`](https://coverage.readthedocs.io/en/7.2.3/) via
-   [`pytest-cov`](https://pytest-cov.readthedocs.io/en/latest/).
+### Command line interface
+
+```bash
+# Basic usage with default parameters
+comparator
+
+# Specify custom parameters
+comparator --lat 48.6 --lon -121.4 --south 46.6 --west -121.4 --doi 10.5067/PP7T2GBI52I2 --data-dir data --output-dir output --boundary-file SkagitBoundary.json --variables SWE_Post:mean,SCA_Post:mean
+```
+
+### Python API
+
+```python
+import os
+from dotenv import load_dotenv
+import geopandas as gpd
+from comparator import core, data_processing, visualization
+
+# Load environment variables (for Earthdata credentials)
+load_dotenv()
+
+# Set parameters
+lat = 48.6
+lon = -121.4
+south = 46.6
+west = -121.4
+doi = "10.5067/PP7T2GBI52I2"
+data_dir = "data"
+output_dir = "output"
+
+# Create a map
+map_path = core.create_map(lat, lon, south, west, False, os.path.join(output_dir, "map.html"))
+
+# Search for data
+results = core.search_earth_data(doi, lon, lat)
+subset, files, years = core.filter_snow_data(results)
+
+# Download data
+downloaded_files = core.download_earth_data(subset, data_dir)
+
+# Load the dataset
+dataset = data_processing.load_dataset(downloaded_files)
+
+# Load the Skagit boundary
+try:
+    boundary_gdf = gpd.read_file("SkagitBoundary.json")
+except Exception as e:
+    print(f"Error loading boundary: {e}")
+    boundary_gdf = None
+
+# Extract variables
+variable_dict = {"SWE_Post": "mean", "SCA_Post": "mean"}
+extracted_data = data_processing.extract_variables(dataset, variable_dict, output_dir)
+
+# Plot data
+swe_mean = visualization.plot_skagit_basin_data(
+    dataset, "SWE_Post", "mean", 0, boundary_gdf, output_dir
+)
+sca_mean = visualization.plot_skagit_basin_data(
+    dataset, "SCA_Post", "mean", 0, boundary_gdf, output_dir
+)
+
+# Plot comparison
+if swe_mean is not None and sca_mean is not None:
+    visualization.plot_comparison(
+        [swe_mean, sca_mean],
+        ["SWE", "SCA"],
+        "Skagit Basin Mean SWE and SCA",
+        os.path.join(output_dir, "skagit_basin_swe_sca_comparison.png")
+    )
+```
+
+## Requirements
+
+- Python 3.8+
+- NASA Earthdata account (set credentials in `.env` file)
+
+## Environment Variables
+
+Create a `.env` file with your Earthdata credentials:
+
+```
+EARTHDATA_USERNAME=your_username
+EARTHDATA_PASSWORD=your_password
+```
 
 ## Open source licensing
 
