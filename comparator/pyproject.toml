@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snow_analysis"
+version = "0.1.0"
+description = "Package for analyzing snow data in the Skagit River Basin"
+authors = [
+    {name = "Shivam Agarwal", email = "shivam96@uw.edu"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "dask",
+    "fsspec",
+    "folium",
+    "watermark",
+    "earthaccess",
+    "xarray",
+    "pandas",
+    "geopandas",
+    "matplotlib",
+    "rioxarray",
+    "python-dotenv",
+    "shapely",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+]
+
+[project.scripts]
+snow-analysis = "comparator.cli:main"
