@@ -24,6 +24,7 @@ dependencies = [
     "rioxarray",
     "python-dotenv",
     "shapely",
+    "netCDF4"
 ]
 
 [project.optional-dependencies]
