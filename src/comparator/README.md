@@ -22,10 +22,10 @@ pip install -e .
 
 ```bash
 # Basic usage with default parameters
-skagit-snow
+comparator
 
 # Specify custom parameters
-skagit-snow --lat 48.6 --lon -121.4 --south 46.6 --west -121.4 --doi 10.5067/PP7T2GBI52I2 --data-dir data --output-dir output --boundary-file SkagitBoundary.json --variables SWE_Post:mean,SCA_Post:mean
+comparator --lat 48.6 --lon -121.4 --south 46.6 --west -121.4 --doi 10.5067/PP7T2GBI52I2 --data-dir data --output-dir output --boundary-file SkagitBoundary.json --variables SWE_Post:mean,SCA_Post:mean
 ```
 
 ### Python API
@@ -34,7 +34,7 @@ skagit-snow --lat 48.6 --lon -121.4 --south 46.6 --west -121.4 --doi 10.5067/PP7
 import os
 from dotenv import load_dotenv
 import geopandas as gpd
-from skagit_snow_analysis import core, data_processing, visualization
+from comparator import core, data_processing, visualization
 
 # Load environment variables (for Earthdata credentials)
 load_dotenv()

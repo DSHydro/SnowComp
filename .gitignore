@@ -133,3 +133,8 @@ dmypy.json
 
 # Local Package
 version.py
+
+data/
+
+output/
+
